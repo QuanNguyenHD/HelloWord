@@ -26,6 +26,7 @@ class Index extends \Magento\Sales\Controller\Adminhtml\Order\Create implements 
         $resultPage->setActiveMenu('Magento_Sales::sales_order');
         $resultPage->getConfig()->getTitle()->prepend(__('Orders'));
         $resultPage->getConfig()->getTitle()->prepend(__('New Order'));
+        $this->_processData();
         return $resultPage;
     }
 }

@@ -33,7 +33,6 @@ class Create extends \Magento\Framework\DataObject implements \Magento\Checkout\
      */
     const XML_PATH_DEFAULT_EMAIL_DOMAIN = 'customer/create_account/email_domain';
 
-    private const XML_PATH_EMAIL_REQUIRED_CREATE_ORDER = 'customer/create_account/email_required_create_order';
     /**
      * Quote session object
      *
@@ -1369,7 +1368,7 @@ class Create extends \Magento\Framework\DataObject implements \Magento\Checkout\
         $data = isset($data['region']) && is_array($data['region']) ? array_merge($data, $data['region']) : $data;
 
         $addressForm = $this->_metadataFormFactory->create(
-
+            
             AddressMetadataInterface::ENTITY_TYPE_ADDRESS,
             'adminhtml_customer_address',
             $data,
@@ -1645,7 +1644,6 @@ class Create extends \Magento\Framework\DataObject implements \Magento\Checkout\
             $data,
             \Magento\Customer\Api\Data\CustomerInterface::class
         );
-        $customer->setStoreId($this->getQuote()->getStoreId());
         $this->getQuote()->updateCustomerData($customer);
         $data = [];
 
@@ -2038,47 +2036,7 @@ class Create extends \Magento\Framework\DataObject implements \Magento\Checkout\
      */
     protected function _getNewCustomerEmail()
     {
-        $email = $this->getData('account/email');
-
-        if ($email || $this->isEmailRequired()) {
-            return $email;
-        }
-
-        return $this->generateEmail();
-    }
-
-    /**
-     * Check email is require
-     *
-     * @return bool
-     */
-    private function isEmailRequired(): bool
-    {
-        return (bool)$this->_scopeConfig->getValue(
-            self::XML_PATH_EMAIL_REQUIRED_CREATE_ORDER,
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE,
-            $this->_session->getStore()->getId()
-        );
-    }
-
-    /**
-     * Generate Email
-     *
-     * @return string
-     */
-    private function generateEmail(): string
-    {
-        $host = $this->_scopeConfig->getValue(
-            self::XML_PATH_DEFAULT_EMAIL_DOMAIN,
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
-        );
-        $account = time();
-        $email = $account . '@' . $host;
-        $account = $this->getData('account');
-        $account['email'] = $email;
-        $this->setData('account', $account);
-
-        return $email;
+        return $this->getData('account/email');
     }
 
     /**
