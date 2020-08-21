@@ -3,33 +3,21 @@
  * Copyright © Magento, Inc. All rights reserved.
  * See COPYING.txt for license details.
  */
-declare(strict_types=1);
-
 namespace Magento\Sales\Test\Unit\Model\Order\Pdf;
 
-use Magento\Framework\App\Config\ScopeConfigInterface;
-use Magento\Framework\Filesystem;
-use Magento\Framework\Filesystem\Directory\Write;
-use Magento\Framework\Stdlib\StringUtils;
-use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
-use Magento\Framework\View\Element\Template;
 use Magento\MediaStorage\Helper\File\Storage\Database;
-use Magento\Payment\Helper\Data;
-use Magento\Payment\Model\InfoInterface;
+use Magento\Sales\Model\Order\Invoice;
 use Magento\Sales\Model\Order;
+use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Sales\Model\Order\Address;
 use Magento\Sales\Model\Order\Address\Renderer;
-use Magento\Sales\Model\Order\Invoice;
-use Magento\Sales\Model\Order\Pdf\Config;
-use Magento\Store\Model\ScopeInterface;
-use PHPUnit\Framework\MockObject\MockObject;
-use PHPUnit\Framework\TestCase;
 
 /**
+ * Class InvoiceTest
  *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
-class InvoiceTest extends TestCase
+class InvoiceTest extends \PHPUnit\Framework\TestCase
 {
     /**
      * @var \Magento\Sales\Model\Order\Pdf\Invoice
@@ -37,60 +25,62 @@ class InvoiceTest extends TestCase
     protected $_model;
 
     /**
-     * @var Config|MockObject
+     * @var \Magento\Sales\Model\Order\Pdf\Config|\PHPUnit_Framework_MockObject_MockObject
      */
     protected $_pdfConfigMock;
 
     /**
-     * @var Database|MockObject
+     * @var Database|\PHPUnit_Framework_MockObject_MockObject
      */
     protected $databaseMock;
 
     /**
-     * @var ScopeConfigInterface|MockObject
+     * @var ScopeConfigInterface|\PHPUnit_Framework_MockObject_MockObject
      */
     protected $scopeConfigMock;
 
     /**
-     * @var Write|MockObject
+     * @var \Magento\Framework\Filesystem\Directory\Write|\PHPUnit_Framework_MockObject_MockObject
      */
     protected $directoryMock;
 
     /**
-     * @var Renderer|MockObject
+     * @var Renderer|\PHPUnit_Framework_MockObject_MockObject
      */
     protected $addressRendererMock;
 
     /**
-     * @var Data|MockObject
+     * @var \Magento\Payment\Helper\Data|\PHPUnit_Framework_MockObject_MockObject
      */
     protected $paymentDataMock;
 
-    protected function setUp(): void
+    protected function setUp()
     {
-        $this->_pdfConfigMock = $this->getMockBuilder(Config::class)
+        $this->_pdfConfigMock = $this->getMockBuilder(\Magento\Sales\Model\Order\Pdf\Config::class)
             ->disableOriginalConstructor()
             ->getMock();
-        $this->directoryMock = $this->createMock(Write::class);
-        $this->directoryMock->expects($this->any())->method('getAbsolutePath')->willReturnCallback(
-            function ($argument) {
-                return BP . '/' . $argument;
-            }
+        $this->directoryMock = $this->createMock(\Magento\Framework\Filesystem\Directory\Write::class);
+        $this->directoryMock->expects($this->any())->method('getAbsolutePath')->will(
+            $this->returnCallback(
+                function ($argument) {
+                    return BP . '/' . $argument;
+                }
+            )
         );
-        $filesystemMock = $this->createMock(Filesystem::class);
+        $filesystemMock = $this->createMock(\Magento\Framework\Filesystem::class);
         $filesystemMock->expects($this->any())
             ->method('getDirectoryRead')
-            ->willReturn($this->directoryMock);
+            ->will($this->returnValue($this->directoryMock));
         $filesystemMock->expects($this->any())
             ->method('getDirectoryWrite')
-            ->willReturn($this->directoryMock);
+            ->will($this->returnValue($this->directoryMock));
 
         $this->databaseMock = $this->createMock(Database::class);
-        $this->scopeConfigMock = $this->getMockForAbstractClass(ScopeConfigInterface::class);
+        $this->scopeConfigMock = $this->createMock(ScopeConfigInterface::class);
         $this->addressRendererMock = $this->createMock(Renderer::class);
-        $this->paymentDataMock = $this->createMock(Data::class);
+        $this->paymentDataMock = $this->createMock(\Magento\Payment\Helper\Data::class);
 
-        $helper = new ObjectManager($this);
+        $helper = new \Magento\Framework\TestFramework\Unit\Helper\ObjectManager($this);
         $this->_model = $helper->getObject(
             \Magento\Sales\Model\Order\Pdf\Invoice::class,
             [
@@ -99,7 +89,7 @@ class InvoiceTest extends TestCase
                 'fileStorageDatabase' => $this->databaseMock,
                 'scopeConfig' => $this->scopeConfigMock,
                 'addressRenderer' => $this->addressRendererMock,
-                'string' => new StringUtils(),
+                'string' => new \Magento\Framework\Stdlib\StringUtils(),
                 'paymentData' => $this->paymentDataMock
             ]
         );
@@ -113,11 +103,13 @@ class InvoiceTest extends TestCase
             'getRenderersPerProduct'
         )->with(
             'invoice'
-        )->willReturn(
-            [
-                'product_type_one' => 'Renderer_Type_One_Product_One',
-                'product_type_two' => 'Renderer_Type_One_Product_Two',
-            ]
+        )->will(
+            $this->returnValue(
+                [
+                    'product_type_one' => 'Renderer_Type_One_Product_One',
+                    'product_type_two' => 'Renderer_Type_One_Product_Two',
+                ]
+            )
         );
 
         $this->_model->getPdf([]);
@@ -140,12 +132,12 @@ class InvoiceTest extends TestCase
         $this->_pdfConfigMock->expects($this->once())
             ->method('getRenderersPerProduct')
             ->with('invoice')
-            ->willReturn(['product_type_one' => 'Renderer_Type_One_Product_One']);
+            ->will($this->returnValue(['product_type_one' => 'Renderer_Type_One_Product_One']));
         $this->_pdfConfigMock->expects($this->any())
             ->method('getTotals')
-            ->willReturn([]);
+            ->will($this->returnValue([]));
 
-        $block = $this->getMockBuilder(Template::class)
+        $block = $this->getMockBuilder(\Magento\Framework\View\Element\Template::class)
             ->disableOriginalConstructor()
             ->setMethods(['setIsSecureMode','toPdf'])
             ->getMock();
@@ -154,18 +146,18 @@ class InvoiceTest extends TestCase
             ->willReturn($block);
         $block->expects($this->any())
             ->method('toPdf')
-            ->willReturn('');
+            ->will($this->returnValue(''));
         $this->paymentDataMock->expects($this->any())
             ->method('getInfoBlock')
             ->willReturn($block);
 
         $this->addressRendererMock->expects($this->any())
             ->method('format')
-            ->willReturn('');
+            ->will($this->returnValue(''));
 
         $this->databaseMock->expects($this->any())
             ->method('checkDbUsage')
-            ->willReturn(true);
+            ->will($this->returnValue(true));
 
         $invoiceMock = $this->createMock(Invoice::class);
         $orderMock = $this->createMock(Order::class);
@@ -175,8 +167,8 @@ class InvoiceTest extends TestCase
             ->willReturn($addressMock);
         $orderMock->expects($this->any())
             ->method('getIsVirtual')
-            ->willReturn(true);
-        $infoMock = $this->getMockForAbstractClass(InfoInterface::class);
+            ->will($this->returnValue(true));
+        $infoMock = $this->createMock(\Magento\Payment\Model\InfoInterface::class);
         $orderMock->expects($this->any())
             ->method('getPayment')
             ->willReturn($infoMock);
@@ -189,12 +181,12 @@ class InvoiceTest extends TestCase
 
         $this->scopeConfigMock->expects($this->at(0))
             ->method('getValue')
-            ->with('sales/identity/logo', ScopeInterface::SCOPE_STORE, null)
-            ->willReturn($filename);
+            ->with('sales/identity/logo', \Magento\Store\Model\ScopeInterface::SCOPE_STORE, null)
+            ->will($this->returnValue($filename));
         $this->scopeConfigMock->expects($this->at(1))
             ->method('getValue')
-            ->with('sales/identity/address', ScopeInterface::SCOPE_STORE, null)
-            ->willReturn('');
+            ->with('sales/identity/address', \Magento\Store\Model\ScopeInterface::SCOPE_STORE, null)
+            ->will($this->returnValue(''));
 
         $this->directoryMock->expects($this->any())
             ->method('isFile')

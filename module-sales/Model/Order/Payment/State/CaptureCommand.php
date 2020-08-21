@@ -11,9 +11,6 @@ use Magento\Sales\Api\Data\OrderPaymentInterface;
 use Magento\Sales\Model\Order;
 use Magento\Sales\Model\Order\StatusResolver;
 
-/**
- * Process order state and status after capture operation.
- */
 class CaptureCommand implements CommandInterface
 {
     /**
@@ -31,8 +28,6 @@ class CaptureCommand implements CommandInterface
     }
 
     /**
-     * Run command.
-     *
      * @param OrderPaymentInterface $payment
      * @param string|float $amount
      * @param OrderInterface $order
@@ -55,8 +50,6 @@ class CaptureCommand implements CommandInterface
             $message .= ' Order is suspended as its capturing amount %1 is suspected to be fraudulent.';
         }
 
-        $message = $this->getNotificationMessage($payment) ?? $message;
-
         if (!isset($status)) {
             $status = $this->statusResolver->getOrderStatusByState($order, $state);
         }
@@ -68,13 +61,12 @@ class CaptureCommand implements CommandInterface
     }
 
     /**
-     * Sets order state and status.
+     * @deprecated 100.1.9 Replaced by a StatusResolver class call.
      *
      * @param Order $order
      * @param string $status
      * @param string $state
      * @return void
-     * @deprecated 100.1.9 Replaced by a StatusResolver class call.
      */
     protected function setOrderStateAndStatus(Order $order, $status, $state)
     {
@@ -83,21 +75,5 @@ class CaptureCommand implements CommandInterface
         }
 
         $order->setState($state)->setStatus($status);
-    }
-
-    /**
-     * Returns payment notification message.
-     *
-     * @param OrderPaymentInterface $payment
-     * @return string|null
-     */
-    private function getNotificationMessage(OrderPaymentInterface $payment): ?string
-    {
-        $extensionAttributes = $payment->getExtensionAttributes();
-        if ($extensionAttributes && $extensionAttributes->getNotificationMessage()) {
-            return $extensionAttributes->getNotificationMessage();
-        }
-
-        return null;
     }
 }
